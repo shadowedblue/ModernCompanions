@@ -1019,6 +1019,15 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
                     if (held.is(ModItems.COMPANION_MOVER.get())) {
                         return InteractionResult.PASS;
                     }
+                    // Summoning Torch: Shift + right-click to bind this companion to the torch.
+                    if (player.isShiftKeyDown() && held.is(ModItems.SUMMONING_TORCH.get())) {
+                        if (!this.level().isClientSide()) {
+                            held.set(com.majorbonghits.moderncompanions.core.DataComponentInit.BOUND_COMPANION.get(),
+                                    new com.majorbonghits.moderncompanions.core.DataComponentInit.BoundCompanionData(this.getUUID(), this.getDisplayName().getString()));
+                            player.sendSystemMessage(Component.translatable("message.modern_companions.summoning_torch_bound", this.getDisplayName()));
+                            return InteractionResult.sidedSuccess(this.level().isClientSide());
+                        }
+                    }
                     if (player.isShiftKeyDown()) {
                         if (!this.level().isClientSide()) {
                             toggleSit((ServerPlayer) player);
@@ -1310,6 +1319,10 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             }
             trackDistanceNearOwner();
             tickAging();
+            // Store last position every 1 second for Summoning Torch recall-from-unloaded / cross-dimension.
+            if (this.isTame() && this.tickCount % 20 == 0 && this.level() instanceof ServerLevel serverLevel) {
+                com.majorbonghits.moderncompanions.core.CompanionLastPositionData.get(serverLevel.getServer()).setPosition(this.getUUID(), serverLevel, this.blockPosition());
+            }
         }
         boolean equipmentChanged = recomputeEquipmentAttributeBonuses();
         if (equipmentChanged) {
@@ -2127,6 +2140,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
 
     private void tickAging() {
         if (this.level().isClientSide()) return;
+        if (!ModConfig.safeGet(ModConfig.AGING_ENABLED)) return;
         long now = this.level().getGameTime();
         if (personality.getLastAgeCheckGameTime() < 0) {
             personality.setLastAgeCheckGameTime(now);

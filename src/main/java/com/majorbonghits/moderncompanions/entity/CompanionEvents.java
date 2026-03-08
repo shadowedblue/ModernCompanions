@@ -1,12 +1,17 @@
 package com.majorbonghits.moderncompanions.entity;
 
 import com.majorbonghits.moderncompanions.ModernCompanions;
+import com.majorbonghits.moderncompanions.core.CompanionLastPositionData;
 import com.majorbonghits.moderncompanions.core.ModConfig;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
@@ -74,5 +79,35 @@ public final class CompanionEvents {
         copy.setCount(Math.max(1, copy.getCount()));
         var extra = new net.minecraft.world.entity.item.ItemEntity(event.getEntity().level(), pick.getX(), pick.getY(), pick.getZ(), copy);
         drops.add(extra);
+    }
+
+    /** When the owner dies, save all their companions' positions so Summoning Torch recall works after respawn (chunks may unload). */
+    @SubscribeEvent
+    public static void onOwnerDeathSaveCompanionPositions(LivingDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (!(entity instanceof ServerPlayer player)) return;
+        if (!(entity.level() instanceof ServerLevel serverLevel)) return;
+        var server = serverLevel.getServer();
+        for (ServerLevel level : server.getAllLevels()) {
+            for (AbstractHumanCompanionEntity companion : level.getEntitiesOfClass(AbstractHumanCompanionEntity.class, AABB.INFINITE)) {
+                if (companion.isTame() && companion.getOwner() != null && companion.getOwner().getUUID().equals(player.getUUID())) {
+                    CompanionLastPositionData.get(server).setPosition(companion.getUUID(), level, companion.blockPosition());
+                }
+            }
+        }
+    }
+
+    /** When the owner changes dimension, save their companions' positions in the level they are leaving. */
+    @SubscribeEvent
+    public static void onOwnerChangeDimensionSaveCompanionPositions(EntityTravelToDimensionEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (player.level() instanceof ServerLevel fromLevel) {
+            var server = fromLevel.getServer();
+            for (AbstractHumanCompanionEntity companion : fromLevel.getEntitiesOfClass(AbstractHumanCompanionEntity.class, AABB.INFINITE)) {
+                if (companion.isTame() && companion.getOwner() != null && companion.getOwner().getUUID().equals(player.getUUID())) {
+                    CompanionLastPositionData.get(server).setPosition(companion.getUUID(), fromLevel, companion.blockPosition());
+                }
+            }
+        }
     }
 }

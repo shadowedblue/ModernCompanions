@@ -20,6 +20,8 @@ import net.minecraft.world.entity.player.Inventory;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.neoforged.fml.ModList;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -176,6 +178,70 @@ public class CompanionScreen extends AbstractContainerScreen<CompanionMenu> {
     public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
         super.render(gfx, mouseX, mouseY, partialTick);
         this.renderTooltip(gfx, mouseX, mouseY);
+    }
+
+    @Override
+    protected void renderTooltip(GuiGraphics gfx, int mouseX, int mouseY) {
+        super.renderTooltip(gfx, mouseX, mouseY);
+        Optional<AbstractHumanCompanionEntity> cOpt = safeCompanion();
+        AbstractHumanCompanionEntity c = cOpt.orElse(null);
+
+        if (alertButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            tooltips.add(Component.translatable(c != null && c.isAlert() ? "gui.modern_companions.button.alert_on" : "gui.modern_companions.button.alert_off"));
+            tooltips.add(Component.translatable("gui.modern_companions.button.alert_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (huntButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            tooltips.add(Component.translatable(c != null && c.isHunting() ? "gui.modern_companions.button.hunt_on" : "gui.modern_companions.button.hunt_off"));
+            tooltips.add(Component.translatable("gui.modern_companions.button.hunt_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (patrolButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            if (c != null && c.isFollowing()) {
+                tooltips.add(Component.translatable("gui.modern_companions.button.follow"));
+                tooltips.add(Component.translatable("gui.modern_companions.button.follow_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            } else if (c != null && c.isPatrolling()) {
+                tooltips.add(Component.translatable("gui.modern_companions.button.patrol"));
+                tooltips.add(Component.translatable("gui.modern_companions.button.patrol_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            } else {
+                tooltips.add(Component.translatable("gui.modern_companions.button.guard"));
+                tooltips.add(Component.translatable("gui.modern_companions.button.guard_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            }
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (sprintButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            tooltips.add(Component.translatable(c != null && c.isSprintEnabled() ? "gui.modern_companions.button.sprint_on" : "gui.modern_companions.button.sprint_off"));
+            tooltips.add(Component.translatable("gui.modern_companions.button.sprint_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (clearButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            tooltips.add(Component.translatable("gui.modern_companions.button.clear"));
+            tooltips.add(Component.translatable("gui.modern_companions.button.clear_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (pickupButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            tooltips.add(Component.translatable(c != null && c.isPickupEnabled() ? "gui.modern_companions.button.pickup_on" : "gui.modern_companions.button.pickup_off"));
+            tooltips.add(Component.translatable("gui.modern_companions.button.pickup_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (releaseButton.isHovered()) {
+            List<Component> tooltips = new ArrayList<>();
+            tooltips.add(Component.translatable("gui.modern_companions.button.release"));
+            tooltips.add(Component.translatable("gui.modern_companions.button.release_hint").withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.ITALIC));
+            gfx.renderTooltip(this.font, tooltips, Optional.empty(), mouseX, mouseY);
+        }
+        if (radiusPlus.isHovered()) {
+            gfx.renderTooltip(this.font, Component.translatable("gui.modern_companions.button.radius_plus"), mouseX, mouseY);
+        }
+        if (radiusMinus.isHovered()) {
+            gfx.renderTooltip(this.font, Component.translatable("gui.modern_companions.button.radius_minus"), mouseX, mouseY);
+        }
     }
 
     /* ---------- Button actions ---------- */

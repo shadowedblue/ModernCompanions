@@ -1,3 +1,8 @@
+- 2026-03-08 (summoning cooldown): If wand cooldown is ever made configurable, mirror it for the torch so both items stay in sync.
+- 2026-03-08 (resource paths): Use only lowercase and [a-z0-9/._-] for all asset paths (textures, models, etc.) to avoid ResourceLocationException on case-sensitive environments and when opening menus.
+- 2026-03-08 (summoning torch): Add a custom texture at `modern_companions/textures/item/summoning_torch.png` and set the model `layer0` to `modern_companions:item/summoning_torch` for a dedicated Summoning Torch icon.
+- 2026-03-08 (resurrection config): Consider validating resurrectionScrollActivationItem at config load and logging a warning if the item id is invalid so pack makers notice typos.
+- 2026-03-08 (aging config): Consider exposing the aging interval (ticks or in-game days per year) in config so pack makers can speed up or slow down companion aging without code changes; optional per-companion or per-world override could follow if requested.
 - 2025-11-18: Next, port original Human Companions content into the new NeoForge 1.21.1 scaffolding—migrate registries (entities/items/structures), networking, configs, and assets under `modern_companions`, then add README and run a full Gradle build once the code is in place.
 - 2025-11-18 (later): Finish porting gameplay logic (entities/AI, networking, GUIs, structure placement) onto the new registries; add data-driven assets under the new namespace once binary inclusion is allowed, then verify with a Gradle build.
 - 2025-11-18 (further): Next still to-do—port GUI toggle controls and networking for patrol/alert/hunt/stationary flags, migrate companion house worldgen data/logic, and run a full Gradle build/validation once core behaviors are complete.

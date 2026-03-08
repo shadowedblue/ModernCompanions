@@ -1745,3 +1745,52 @@
   - Bumped version to 1.1.20 and rebuilt.
 - Rationale: Provide clear, technical docs for the personality systems so users and pack makers understand the exact effects and optional integrations.
 - Build/Test: `./gradlew build -x test` ✔️
+
+## 2026-03-08 (Configurable companion aging)
+- Prompt/task: "Analyze this Project, look for where there is Aging of Companions, can you make this configurable of whether companions will age."
+- Steps:
+  - Located aging logic in `AbstractHumanCompanionEntity.tickAging()` (called from server tick); age advances 1 year every ~3 in-game months (AGE_INTERVAL_TICKS). Initial age is set in `rollMissingFlavorData()` and displayed in Companion Journal Bio.
+  - Added `AGING_ENABLED` to `ModConfig` under the "personality" section (default true), with comment describing behavior.
+  - Gated `tickAging()` with an early return when `!ModConfig.safeGet(ModConfig.AGING_ENABLED)` so companions do not gain years when the option is off; initial age (18–36) is still assigned for new/legacy companions so the Bio always shows a value.
+  - Bumped version to 1.1.21; updated TRACELOG.md and SUGGESTIONS.md.
+- Rationale: Allows server/pack makers and players to disable companion age progression (e.g. for long-running worlds or preference) while keeping the existing age display and initial roll when enabled.
+- Build/Test: `./gradlew build -x test` ✔️
+
+## 2026-03-08 (Configurable resurrection scroll activation item)
+- Prompt/task: "Is activation of the scroll configurable? if not can we make the item configurable and default nether star but let config change it to eg diamond or whatever they want."
+- Steps:
+  - Confirmed activation was hardcoded to Nether Star. Added `RESURRECTION_SCROLL_ACTIVATION_ITEM` (string, item registry id) to ModConfig under a new "resurrection" section, default "minecraft:nether_star".
+  - In ResurrectionScrollItem added getActivationItem() to resolve the config id via BuiltInRegistries.ITEM with fallback to Nether Star if missing/invalid. tryActivate() and the inactive-scroll tooltip now use this item; failure message and tooltip use a new lang key with the required item name.
+  - Added lang key "tooltip.modern_companions.resurrection_scroll.needs_activation_item": "Hold %s in off-hand to activate." Bumped version to 1.1.22; updated TRACELOG.md and SUGGESTIONS.md.
+- Rationale: Lets server/pack makers lower or raise the cost of scroll activation (e.g. minecraft:diamond) without code changes; invalid config falls back to Nether Star.
+- Build/Test: `./gradlew build -x test` ✔️
+
+## 2026-03-08 (Summoning Torch – single-target summon)
+- Prompt/task: Add "Summoning Torch" with same single-target functionality.
+- Steps:
+  - Added CompanionLastPositionData (SavedData) to store last dimension + position per companion UUID; updated every 20 ticks when tamed, on owner death, and on owner dimension change.
+  - Added DataComponentInit with BOUND_COMPANION (BoundCompanionData: companionId UUID, companionName); registered DATA_COMPONENTS on mod bus.
+  - Added CompanionRecallUtil: findCompanionForRecall (any level or load 3x3 chunk from last position), teleportCompanionTo (same-dim or DimensionTransition + update last position).
+  - Added SummoningTorchItem: Shift + right-click companion to bind; right-click to recall bound companion to player. Registered SUMMONING_TORCH in ModItems.
+  - AbstractHumanCompanionEntity: shift+right-click with Summoning Torch binds companion; server tick every 20 ticks updates CompanionLastPositionData when tamed.
+  - CompanionEvents: onOwnerDeathSaveCompanionPositions, onOwnerChangeDimensionSaveCompanionPositions to persist positions for recall after respawn/dimension change.
+  - Creative tab, lang (item, tooltip, messages), recipe (stick + diamond), model (vanilla torch texture). Bumped version to 1.1.23; TRACELOG and SUGGESTIONS.
+- Rationale: Single-target recall works across dimensions and from unloaded chunks (via last-known position and chunk load); complements Summoning Wand (group, same-dimension, loaded only).
+- Build/Test: `./gradlew build -x test` ✔️
+
+## 2026-03-08 (Summoning Torch cooldown)
+- Prompt/task: Give the Summoning Torch the same cooldown as the wand so it cannot be spammed.
+- Steps:
+  - Added RECALL_COOLDOWN_TICKS = 10 in SummoningTorchItem (matching SummoningWandItem) and call player.getCooldowns().addCooldown(this, RECALL_COOLDOWN_TICKS) after a successful recall.
+  - Bumped version to 1.1.23; TRACELOG and SUGGESTIONS.
+- Rationale: Keeps torch and wand feel consistent and prevents rapid recall spam.
+- Build/Test: `./gradlew build -x test` ✔️
+
+## 2026-03-08 (Companion screen crash – ResourceLocation casing)
+- Prompt/task: Fix client crash when opening companion screen after "Companion added": ExceptionInInitializerError caused by ResourceLocationException on release button texture path.
+- Steps:
+  - Updated CompanionScreen to use resource path `textures/releasebutton.png` (all lowercase) because ResourceLocation allows only `[a-z0-9/._-]`; the previous path `textures/releaseButton.png` had an invalid uppercase 'B'.
+  - Renamed asset file from `releaseButton.png` to `releasebutton.png` (two-step rename on Windows so the filename is stored in lowercase).
+  - Bumped version to 1.1.24; TRACELOG and SUGGESTIONS.
+- Rationale: Minecraft/NeoForge validate resource paths strictly; the companion screen static initializer loads this texture at class init, so the invalid path caused a crash when the server opened the screen.
+- Build/Test: `./gradlew build -x test` ✔️

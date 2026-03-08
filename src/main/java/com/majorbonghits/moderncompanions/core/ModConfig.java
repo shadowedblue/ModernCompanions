@@ -19,6 +19,7 @@ public final class ModConfig {
     public static ModConfigSpec.IntValue BASE_HEALTH;
     public static ModConfigSpec.BooleanValue LOW_HEALTH_FOOD;
     public static ModConfigSpec.BooleanValue CREEPER_WARNING;
+    public static ModConfigSpec.BooleanValue AGING_ENABLED;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
     public static ModConfigSpec.IntValue SECONDARY_TRAIT_CHANCE;
     public static ModConfigSpec.BooleanValue BOND_ENABLED;
@@ -32,6 +33,7 @@ public final class ModConfig {
     public static ModConfigSpec.DoubleValue MORALE_RESURRECT_DELTA;
     public static ModConfigSpec.DoubleValue MORALE_BOND_LEVEL_DELTA;
     public static ModConfigSpec.DoubleValue LUCKY_EXTRA_DROP_CHANCE;
+    public static ModConfigSpec.ConfigValue<String> RESURRECTION_SCROLL_ACTIVATION_ITEM;
 
     /**
      * Safely read a config value even during very early lifecycle (e.g., attribute construction) by
@@ -82,6 +84,9 @@ public final class ModConfig {
         builder.pop();
 
         builder.push("personality");
+        AGING_ENABLED = builder
+                .comment("If true, companions age 1 year every ~3 in-game months (displayed in Bio). If false, age stays fixed.")
+                .define("agingEnabled", true);
         TRAITS_ENABLED = builder
                 .comment("Enable birth traits for companions (Primary/Secondary).")
                 .define("traitsEnabled", true);
@@ -121,6 +126,12 @@ public final class ModConfig {
         LUCKY_EXTRA_DROP_CHANCE = builder
                 .comment("Chance for Lucky trait companions to duplicate one dropped item on a kill (0.0-1.0).")
                 .defineInRange("luckyExtraDropChance", 0.05D, 0.0D, 1.0D);
+        builder.pop();
+
+        builder.push("resurrection");
+        RESURRECTION_SCROLL_ACTIVATION_ITEM = builder
+                .comment("Item registry id required in off-hand to activate a resurrection scroll (e.g. minecraft:nether_star, minecraft:diamond). Invalid ids fall back to minecraft:nether_star.")
+                .define("resurrectionScrollActivationItem", "minecraft:nether_star");
         builder.pop();
 
         ModLoadingContext.get().getActiveContainer()

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "d",
+    "s"
+  ],
+  "key": {
+    "d": { "item": "minecraft:diamond" },
+    "s": { "item": "minecraft:stick" }
+  },
+  "result": { "id": "modern_companions:summoning_torch", "count": 1 }
+}

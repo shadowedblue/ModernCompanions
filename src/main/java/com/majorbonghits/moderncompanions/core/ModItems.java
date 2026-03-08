@@ -3,6 +3,7 @@ package com.majorbonghits.moderncompanions.core;
 import com.majorbonghits.moderncompanions.ModernCompanions;
 import com.majorbonghits.moderncompanions.item.CompanionMoverItem;
 import com.majorbonghits.moderncompanions.item.ResurrectionScrollItem;
+import com.majorbonghits.moderncompanions.item.SummoningTorchItem;
 import com.majorbonghits.moderncompanions.item.SummoningWandItem;
 import com.majorbonghits.moderncompanions.item.StoredCompanionItem;
 import net.minecraft.core.registries.Registries;
@@ -29,6 +30,8 @@ public final class ModItems {
             () -> new CompanionMoverItem(new Item.Properties().rarity(Rarity.UNCOMMON)));
     public static final DeferredHolder<Item, Item> SUMMONING_WAND = ITEMS.register("summoning_wand",
             () -> new SummoningWandItem(new Item.Properties()));
+    public static final DeferredHolder<Item, Item> SUMMONING_TORCH = ITEMS.register("summoning_torch",
+            () -> new SummoningTorchItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredHolder<Item, Item> ARBALIST_SPAWN_EGG = ITEMS.register("arbalist_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntityTypes.ARBALIST, 0xE8AF5A, 0xFF0000, new Item.Properties()));

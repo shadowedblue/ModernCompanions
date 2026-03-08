@@ -1,5 +1,6 @@
 package com.majorbonghits.moderncompanions.item;
 
+import com.majorbonghits.moderncompanions.core.ModConfig;
 import com.majorbonghits.moderncompanions.entity.AbstractHumanCompanionEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -196,13 +197,24 @@ public class ResurrectionScrollItem extends Item {
         return new Vec3(x, y, z);
     }
 
+    /** Resolves the configurable activation item from registry; falls back to Nether Star if invalid. */
+    private static Item getActivationItem() {
+        String id = ModConfig.safeGet(ModConfig.RESURRECTION_SCROLL_ACTIVATION_ITEM);
+        if (id == null || id.isEmpty()) return Items.NETHER_STAR;
+        ResourceLocation key = ResourceLocation.tryParse(id);
+        if (key == null || !BuiltInRegistries.ITEM.containsKey(key)) return Items.NETHER_STAR;
+        return BuiltInRegistries.ITEM.get(key);
+    }
+
     private boolean tryActivate(ItemStack stack, @Nullable Player player) {
         if (player == null || isActivated(stack)) return false;
 
+        Item activationItem = getActivationItem();
         ItemStack offhand = player.getOffhandItem();
-        if (!offhand.is(Items.NETHER_STAR)) {
+        if (!offhand.is(activationItem)) {
             player.displayClientMessage(
-                    Component.translatable("tooltip.modern_companions.resurrection_scroll.needs_nether_star"), true);
+                    Component.translatable("tooltip.modern_companions.resurrection_scroll.needs_activation_item",
+                            activationItem.getDescription()), true);
             return false;
         }
 
@@ -270,6 +282,8 @@ public class ResurrectionScrollItem extends Item {
             tooltip.add(Component.translatable("tooltip.modern_companions.resurrection_scroll.active"));
         } else {
             tooltip.add(Component.translatable("tooltip.modern_companions.resurrection_scroll.inactive"));
+            tooltip.add(Component.translatable("tooltip.modern_companions.resurrection_scroll.needs_activation_item",
+                    getActivationItem().getDescription()));
         }
 
         if (!hasCompanionData(stack)) {
