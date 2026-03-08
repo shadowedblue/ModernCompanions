@@ -1,8 +1,16 @@
 package com.majorbonghits.moderncompanions.entity;
 
 import com.majorbonghits.moderncompanions.ModernCompanions;
+import com.majorbonghits.moderncompanions.block.RespawnAnchorBlock;
+import com.majorbonghits.moderncompanions.block.RespawnAnchorBlockEntity;
 import com.majorbonghits.moderncompanions.core.CompanionLastPositionData;
+import com.majorbonghits.moderncompanions.core.CompanionRespawnData;
+import com.majorbonghits.moderncompanions.core.CompanionRespawnRequest;
+import com.majorbonghits.moderncompanions.core.ModBlocks;
 import com.majorbonghits.moderncompanions.core.ModConfig;
+import com.majorbonghits.moderncompanions.core.RespawnAnchorHandler;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,6 +23,8 @@ import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 @EventBusSubscriber(modid = ModernCompanions.MOD_ID)
 public final class CompanionEvents {
@@ -109,5 +119,62 @@ public final class CompanionEvents {
                 }
             }
         }
+    }
+
+    /** (Beta) On companion death, if they have a bound respawn anchor and feature is enabled, enqueue a respawn request. */
+    @SubscribeEvent
+    public static void onCompanionDeathEnqueueRespawn(LivingDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        if (!(entity instanceof AbstractHumanCompanionEntity companion) || !companion.hasCompanionRespawnAnchor()) return;
+        if (!ModConfig.safeGet(ModConfig.RESPAWN_ANCHOR_ENABLED)) return;
+        if (!(entity.level() instanceof ServerLevel serverLevel)) return;
+
+        String entityTypeId = serverLevel.registryAccess().registryOrThrow(Registries.ENTITY_TYPE)
+                .getKey(companion.getType()).toString();
+        String dimension = companion.getCompanionRespawnAnchorDimension();
+        CompoundTag entityData = new CompoundTag();
+        entityData.putString("id", entityTypeId);
+        companion.saveWithoutId(entityData);
+        String companionName = companion.getCustomName() != null ? companion.getCustomName().getString() : "";
+
+        CompanionRespawnRequest request = new CompanionRespawnRequest(
+                entityTypeId,
+                dimension,
+                entityData,
+                companion.getCompanionRespawnAnchorPos(),
+                companionName
+        );
+        CompanionRespawnData.get(serverLevel.getServer()).addRequest(request);
+    }
+
+    /** When a respawn anchor is broken, clear the bound companion's anchor and remove respawn requests for that pos. */
+    @SubscribeEvent
+    public static void onRespawnAnchorBroken(BlockEvent.BreakEvent event) {
+        if (event.getLevel().isClientSide()) return;
+        if (event.getState().getBlock() != ModBlocks.RESPAWN_ANCHOR.get()) return;
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
+
+        var blockEntity = event.getLevel().getBlockEntity(event.getPos());
+        if (blockEntity instanceof RespawnAnchorBlockEntity anchorEntity) {
+            var boundUuid = anchorEntity.getBoundCompanionUUID();
+            if (boundUuid != null) {
+                var server = serverLevel.getServer();
+                for (ServerLevel level : server.getAllLevels()) {
+                    var e = level.getEntity(boundUuid);
+                    if (e instanceof AbstractHumanCompanionEntity companion) {
+                        companion.clearCompanionRespawnAnchor();
+                        break;
+                    }
+                }
+            }
+        }
+        CompanionRespawnData.get(serverLevel.getServer()).removeRequestsFor(serverLevel, event.getPos());
+        RespawnAnchorBlock.clearBreakWarningFor(event.getPos());
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        RespawnAnchorHandler.clearForPlayer(event.getEntity().getUUID());
     }
 }

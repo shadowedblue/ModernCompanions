@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "   ",
+    "GBG",
+    " D "
+  ],
+  "key": {
+    "B": {
+      "tag": "minecraft:beds"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    }
+  },
+  "result": {
+    "id": "modern_companions:companion_respawn_anchor",
+    "count": 1
+  }
+}

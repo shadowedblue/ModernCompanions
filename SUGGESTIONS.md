@@ -1,3 +1,4 @@
+- 2026-03-08 (respawn anchor): Add a dedicated model/texture for the Companion Respawn Anchor when moving out of beta; consider config for respawn delay (e.g. ticks or in-game days).
 - 2026-03-08 (summoning cooldown): If wand cooldown is ever made configurable, mirror it for the torch so both items stay in sync.
 - 2026-03-08 (resource paths): Use only lowercase and [a-z0-9/._-] for all asset paths (textures, models, etc.) to avoid ResourceLocationException on case-sensitive environments and when opening menus.
 - 2026-03-08 (summoning torch): Add a custom texture at `modern_companions/textures/item/summoning_torch.png` and set the model `layer0` to `modern_companions:item/summoning_torch` for a dedicated Summoning Torch icon.

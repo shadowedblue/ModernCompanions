@@ -7,6 +7,7 @@ import com.majorbonghits.moderncompanions.item.SummoningTorchItem;
 import com.majorbonghits.moderncompanions.item.SummoningWandItem;
 import com.majorbonghits.moderncompanions.item.StoredCompanionItem;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
@@ -32,6 +33,8 @@ public final class ModItems {
             () -> new SummoningWandItem(new Item.Properties()));
     public static final DeferredHolder<Item, Item> SUMMONING_TORCH = ITEMS.register("summoning_torch",
             () -> new SummoningTorchItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredHolder<Item, Item> COMPANION_RESPAWN_ANCHOR = ITEMS.register("companion_respawn_anchor",
+            () -> new BlockItem(ModBlocks.RESPAWN_ANCHOR.get(), new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> ARBALIST_SPAWN_EGG = ITEMS.register("arbalist_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntityTypes.ARBALIST, 0xE8AF5A, 0xFF0000, new Item.Properties()));

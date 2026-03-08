@@ -196,6 +196,11 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private double distanceAccumulator;
     private static final long AGE_INTERVAL_TICKS = 90L * 24000L; // 90 in-game days (~3 months) per year
 
+    /** Respawn anchor: position and dimension. Server-authoritative; used for respawn-after-death. */
+    @Nullable
+    private BlockPos companionRespawnAnchorPos;
+    private String companionRespawnAnchorDimension = "";
+
     private int equipmentStrengthBonus;
     private int equipmentDexterityBonus;
     private int equipmentIntelligenceBonus;
@@ -1028,6 +1033,30 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
                             return InteractionResult.sidedSuccess(this.level().isClientSide());
                         }
                     }
+                    // Respawn Anchor (beta): shift+click anchor then shift+click companion to bind.
+                    if (player.isShiftKeyDown() && com.majorbonghits.moderncompanions.core.ModConfig.safeGet(com.majorbonghits.moderncompanions.core.ModConfig.RESPAWN_ANCHOR_ENABLED)) {
+                        if (!this.level().isClientSide()) {
+                            var pending = com.majorbonghits.moderncompanions.core.RespawnAnchorHandler.getAndClearPending(player);
+                            if (pending.isPresent()) {
+                                var anchor = pending.get();
+                                this.setCompanionRespawnAnchor(anchor.pos(), anchor.dimension());
+                                var server = this.level().getServer();
+                                if (server != null) {
+                                    for (var lvl : server.getAllLevels()) {
+                                        if (lvl.dimension().location().toString().equals(anchor.dimension())) {
+                                            var be = lvl.getBlockEntity(anchor.pos());
+                                            if (be instanceof com.majorbonghits.moderncompanions.block.RespawnAnchorBlockEntity anchorEntity) {
+                                                anchorEntity.setBoundCompanion(this.getDisplayName().getString(), this.getUUID());
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                                player.sendSystemMessage(Component.translatable("message.modern_companions.respawn_anchor_bound", this.getDisplayName()));
+                                return InteractionResult.sidedSuccess(this.level().isClientSide());
+                            }
+                        }
+                    }
                     if (player.isShiftKeyDown()) {
                         if (!this.level().isClientSide()) {
                             toggleSit((ServerPlayer) player);
@@ -1151,6 +1180,10 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
                     this.getPatrolPos().get().getZ() };
             tag.putIntArray("patrol_pos", patrolPos);
         }
+        if (this.companionRespawnAnchorPos != null) {
+            tag.putIntArray("CompanionRespawnAnchorPos", new int[]{this.companionRespawnAnchorPos.getX(), this.companionRespawnAnchorPos.getY(), this.companionRespawnAnchorPos.getZ()});
+            tag.putString("CompanionRespawnAnchorDimension", this.companionRespawnAnchorDimension);
+        }
         CompoundTag personalityTag = new CompoundTag();
         personality.saveTo(personalityTag);
         tag.put("Personality", personalityTag);
@@ -1237,6 +1270,13 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         if (tag.contains("patrol_pos")) {
             int[] positions = tag.getIntArray("patrol_pos");
             setPatrolPos(new BlockPos(positions[0], positions[1], positions[2]));
+        }
+        if (tag.contains("CompanionRespawnAnchorPos")) {
+            int[] pos = tag.getIntArray("CompanionRespawnAnchorPos");
+            if (pos.length == 3) {
+                this.companionRespawnAnchorPos = new BlockPos(pos[0], pos[1], pos[2]);
+                this.companionRespawnAnchorDimension = tag.getString("CompanionRespawnAnchorDimension");
+            }
         }
         if (tag.contains("radius")) {
             patrolGoal = new PatrolGoal(this, 60, tag.getInt("radius"));
@@ -1464,10 +1504,35 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         setPatrolling(true);
         setSprintEnabled(false);
         setPatrolRadius(15);
+        clearCompanionRespawnAnchor();
         assignFoodRequirements();
         if (this.isOrderedToSit()) {
             this.setOrderedToSit(false);
         }
+    }
+
+    /** Respawn anchor (beta): position and dimension for respawn-after-death. */
+    @Nullable
+    public BlockPos getCompanionRespawnAnchorPos() {
+        return companionRespawnAnchorPos;
+    }
+
+    public String getCompanionRespawnAnchorDimension() {
+        return companionRespawnAnchorDimension;
+    }
+
+    public boolean hasCompanionRespawnAnchor() {
+        return companionRespawnAnchorPos != null && !companionRespawnAnchorDimension.isEmpty();
+    }
+
+    public void setCompanionRespawnAnchor(@Nullable BlockPos pos, String dimension) {
+        this.companionRespawnAnchorPos = pos;
+        this.companionRespawnAnchorDimension = dimension == null ? "" : dimension;
+    }
+
+    public void clearCompanionRespawnAnchor() {
+        this.companionRespawnAnchorPos = null;
+        this.companionRespawnAnchorDimension = "";
     }
 
     /* ---------- Experience ---------- */

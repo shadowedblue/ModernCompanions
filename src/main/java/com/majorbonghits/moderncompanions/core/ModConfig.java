@@ -35,6 +35,9 @@ public final class ModConfig {
     public static ModConfigSpec.DoubleValue LUCKY_EXTRA_DROP_CHANCE;
     public static ModConfigSpec.ConfigValue<String> RESURRECTION_SCROLL_ACTIVATION_ITEM;
 
+    /** (Beta) When true, Companion Respawn Anchor block is enabled: bind companion to bed, respawn after death (next day or golden apple). */
+    public static ModConfigSpec.BooleanValue RESPAWN_ANCHOR_ENABLED;
+
     /**
      * Safely read a config value even during very early lifecycle (e.g., attribute construction) by
      * falling back to its default when the config file has not been loaded yet.
@@ -132,6 +135,12 @@ public final class ModConfig {
         RESURRECTION_SCROLL_ACTIVATION_ITEM = builder
                 .comment("Item registry id required in off-hand to activate a resurrection scroll (e.g. minecraft:nether_star, minecraft:diamond). Invalid ids fall back to minecraft:nether_star.")
                 .define("resurrectionScrollActivationItem", "minecraft:nether_star");
+        builder.pop();
+
+        builder.push("respawn_anchor");
+        RESPAWN_ANCHOR_ENABLED = builder
+                .comment("(Beta) Enable the Companion Respawn Anchor block. When enabled, companions can be bound to the anchor; dead companions respawn after one day or when using a golden apple on the anchor.")
+                .define("respawnAnchorEnabled", false);
         builder.pop();
 
         ModLoadingContext.get().getActiveContainer()

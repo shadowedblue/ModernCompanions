@@ -1794,3 +1794,17 @@
   - Bumped version to 1.1.24; TRACELOG and SUGGESTIONS.
 - Rationale: Minecraft/NeoForge validate resource paths strictly; the companion screen static initializer loads this texture at class init, so the invalid path caused a crash when the server opened the screen.
 - Build/Test: `./gradlew build -x test` ✔️
+
+## 2026-03-08 (Companion Respawn Anchor – beta)
+- Prompt/task: Add Companion Respawn Anchor; same functionality except no stick recall; mark (beta), configurable enable/disable.
+- Steps:
+  - Added ModConfig.RESPAWN_ANCHOR_ENABLED (default false) under "respawn_anchor" section.
+  - Created CompanionRespawnRequest, CompanionRespawnData (SavedData on overworld), RespawnAnchorHandler (pending anchor selection).
+  - Created ModBlocks: RESPAWN_ANCHOR block (RespawnAnchorBlock), RESPAWN_ANCHOR_ENTITY block entity (RespawnAnchorBlockEntity). Block id: companion_respawn_anchor. Carpet-like shape; tick at day time 1 to process one respawn.
+  - RespawnAnchorBlock: shift+right-click sets pending; right-click shows owner (and golden-apple hint if dead); golden apple processes one respawn; break warning when pending respawns; all gated by RESPAWN_ANCHOR_ENABLED. No stick recall.
+  - AbstractHumanCompanionEntity: companionRespawnAnchorPos/Dimension, NBT save/load, set/clear/has getters; shift+click companion after setting pending binds companion to anchor; release() clears anchor.
+  - CompanionEvents: onCompanionDeathEnqueueRespawn (when config enabled), onRespawnAnchorBroken (clear companion anchor, remove requests, clear break warning), onPlayerLoggedOut (clear pending).
+  - Registered block + block entity in ModernCompanions; added BlockItem COMPANION_RESPAWN_ANCHOR in ModItems; creative tab; recipe (bed + gold + diamond); loot_table; blockstates + block/item models (white_carpet parent); lang with (Beta) and all messages.
+  - Bumped version to 1.1.25; TRACELOG and SUGGESTIONS.
+- Rationale: Provides respawn-after-death at anchor (next day or golden apple) with config gate for beta; no stick recall as requested.
+- Build/Test: `./gradlew build -x test` ✔️

@@ -51,6 +51,7 @@ public final class ModCreativeTabs {
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.STORED_COMPANION.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.SUMMONING_WAND.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.SUMMONING_TORCH.get());
+                        output.accept(com.majorbonghits.moderncompanions.core.ModItems.COMPANION_RESPAWN_ANCHOR.get());
 
                         // Attribute enchantment books (I–III)
                         addEnchantBooks(params, output, ModEnchantments.EMPOWER);
